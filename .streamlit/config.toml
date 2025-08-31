@@ -1,12 +1,12 @@
 [theme]
-base = "light"
-primaryColor = "#2563eb"          # Deep modern blue
-backgroundColor = "#fdfdfd"       # Clean white
-secondaryBackgroundColor = "#f1f5f9"  # Subtle gray-blue panels
-textColor = "#0f172a"             # Dark slate for readability
-font = "sans serif"
+base="light"
+primaryColor="#4f46e5"          # Vibrant Indigo
+backgroundColor="#ffffff"       # Clean White
+secondaryBackgroundColor="#f0f4ff"  # Soft Indigo Tint
+textColor="#1e293b"             # Slate Gray for readability
+font="sans serif"
 
 [server]
 headless = true
 enableCORS = false
-enableXsrfProtection = false
+enableXsrfProtection = true
