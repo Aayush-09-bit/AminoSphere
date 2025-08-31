@@ -1,7 +1,7 @@
-streamlit>=1.25
-stmol
-py3Dmol
+streamlit
 requests
 biotite
+py3Dmol
+stmol
 matplotlib
 pandas
