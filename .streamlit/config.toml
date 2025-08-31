@@ -1,12 +1,7 @@
 [theme]
 base="light"
-primaryColor="#4f46e5"          # Vibrant Indigo
-backgroundColor="#ffffff"       # Clean White
-secondaryBackgroundColor="#f0f4ff"  # Soft Indigo Tint
-textColor="#1e293b"             # Slate Gray for readability
+primaryColor="#2E86AB"
+backgroundColor="#F5F7FA"
+secondaryBackgroundColor="#EAF2F8"
+textColor="#1B2631"
 font="sans serif"
-
-[server]
-headless = true
-enableCORS = false
-enableXsrfProtection = true
