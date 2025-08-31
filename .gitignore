@@ -1,24 +1,7 @@
-# Python
 __pycache__/
-*.py[cod]
-*.egg-info/
-.env
-.venv/
-venv/
-
-# Jupyter & Streamlit
-.ipynb_checkpoints/
-.streamlit/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Data & results
-data/results/*.csv
-data/results/*.pdb
+*.pyc
+*.pyo
 *.pdb
-
-# Cache / logs
-.cache/
-*.log
+.env
+temp_predicted.pdb
+.predicted.pdb
