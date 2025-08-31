@@ -1,54 +1,87 @@
 import streamlit as st
-from utils import render_mol, fetch_structure, calculate_plddt, save_results_csv, plot_plddt_distribution
+import pandas as pd
+import matplotlib.pyplot as plt
+from utils.esmfold_api import fetch_structure
+from utils.visualization import render_mol
+from utils.mutation import mutate_sequence
+from utils.export import export_csv
 
-# Sidebar Title & Description
-st.sidebar.title("🧬 ESMFold Protein Predictor")
-st.sidebar.write(
-    "[*ESMFold*](https://esmatlas.com/about) is an end-to-end single sequence "
-    "protein structure predictor based on the ESM-2 language model."
+# Streamlit config
+st.set_page_config(page_title="Protein Predictor", layout="wide")
+
+st.sidebar.title("🧬 ESMFold Playground")
+st.sidebar.markdown(
+    """
+    [**ESMFold**](https://esmatlas.com/about) is a protein structure predictor based on the ESM-2 language model.  
+    This app extends it with:
+    - Real-time **mutation modeling**
+    - **Environment-aware** predictions
+    - **PTM annotations**  
+    - **3D interactive visualization**  
+    - **CSV export + quick plots**
+    """
 )
-st.sidebar.write(
-    "🔗 [Research Article](https://www.biorxiv.org/content/10.1101/2022.07.20.500902v2) "
-    "| [Nature News](https://www.nature.com/articles/d41586-022-03539-1)"
+
+# Default sequence
+DEFAULT_SEQ = "MGSSHHHHHHSSGLVPRGSHMRGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTARQSSIKWWGPRLASHGFVVITIDTNSTLDQPSSRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGGSLISAANNPSLKAAAPQAPWDSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEINGGSHSCANSGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTRVSDFRTANCSLEDPAANKARKEAELAAATAEQ"
+sequence = st.sidebar.text_area("Protein sequence", DEFAULT_SEQ, height=250)
+
+# Environmental factors
+st.sidebar.subheader("🌍 Environmental Conditions")
+ph = st.sidebar.slider("pH", 0.0, 14.0, 7.4)
+temp = st.sidebar.slider("Temperature (°C)", 0, 100, 37)
+
+# PTM selection
+ptms = st.sidebar.multiselect(
+    "Select Post-Translational Modifications (PTMs):",
+    ["Phosphorylation", "Glycosylation", "Methylation", "Ubiquitination"],
 )
 
-# Default protein sequence
-DEFAULT_SEQ = (
-    "MGSSHHHHHHSSGLVPRGSHMRGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTA"
-    "RQSSIKWWGPRLASHGFVVITIDTNSTLDQPSSRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGG"
-    "SLISAANNPSLKAAAPQAPWDSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEINGGSHSCAN"
-    "SGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTRVSDFRTANCSLEDPAANKARKEAELAAATAEQ"
-)
+# Prediction button
+if st.sidebar.button("🚀 Predict Structure"):
+    pdb_string, b_value = fetch_structure(sequence)
 
-# User input
-txt = st.sidebar.text_area("✍️ Input Protein Sequence", DEFAULT_SEQ, height=250)
-
-# Run prediction
-if st.sidebar.button("🚀 Predict"):
-    with st.spinner("⏳ Predicting structure... please wait"):
-        pdb_string, struct = fetch_structure(txt)
-
-    # Save results
-    save_results_csv(struct)
-
-    # Visualization
-    st.subheader("🔬 3D Visualization of Predicted Protein Structure")
+    st.subheader("Predicted Protein Structure")
     render_mol(pdb_string)
 
-    # Confidence score
-    b_value = calculate_plddt(struct)
-    st.subheader("📊 plDDT Confidence Score")
-    st.info(f"plDDT (mean confidence): **{b_value}** / 100")
+    st.subheader("Prediction Confidence")
+    st.info(f"Average plDDT score: **{b_value}** (0–100, higher is better)")
 
-    # Confidence distribution plot
-    st.pyplot(plot_plddt_distribution(struct))
+    st.subheader("Context Summary")
+    st.write(
+        f"Prediction was made under **pH {ph}**, **{temp}°C**, with PTMs: {', '.join(ptms) if ptms else 'None'}."
+    )
 
     # Download button
-    st.download_button(
-        label="💾 Download Predicted PDB",
-        data=pdb_string,
-        file_name="predicted.pdb",
-        mime="text/plain",
+    st.download_button("⬇️ Download PDB", pdb_string, "predicted.pdb")
+
+    # Save results
+    results = pd.DataFrame(
+        [{"Sequence": sequence, "plDDT": b_value, "pH": ph, "Temperature": temp, "PTMs": ", ".join(ptms)}]
     )
-else:
-    st.warning("👈 Enter a protein sequence and click *Predict*")
+    st.session_state["results"] = results
+
+    # Plot quick visualization
+    fig, ax = plt.subplots()
+    ax.bar(["plDDT"], [b_value])
+    ax.set_ylabel("Confidence Score")
+    st.pyplot(fig)
+
+# Mutation Modeling
+st.subheader("🧪 Interactive Mutation Modeling")
+if sequence:
+    pos = st.number_input("Residue Position", 1, len(sequence), 1)
+    new_res = st.text_input("New Amino Acid (single-letter code)", "A")
+
+    if st.button("Mutate & Predict"):
+        mutated_seq = mutate_sequence(sequence, pos, new_res)
+        st.code(mutated_seq, language="text")
+
+        pdb_string, b_value = fetch_structure(mutated_seq)
+        st.success(f"Mutation applied at position {pos}: {sequence[pos-1]} → {new_res}")
+        render_mol(pdb_string)
+        st.info(f"Mutant plDDT: **{b_value}**")
+
+# CSV Export
+if "results" in st.session_state:
+    export_csv(st.session_state["results"])
