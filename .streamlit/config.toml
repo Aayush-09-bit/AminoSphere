@@ -1,10 +1,12 @@
 [theme]
-base="light"
-primaryColor="#0ea5e9"
-backgroundColor="#ffffff"
-secondaryBackgroundColor="#f4f4f5"
-textColor="#0f172a"
+base = "light"
+primaryColor = "#2563eb"          # Deep modern blue
+backgroundColor = "#fdfdfd"       # Clean white
+secondaryBackgroundColor = "#f1f5f9"  # Subtle gray-blue panels
+textColor = "#0f172a"             # Dark slate for readability
+font = "sans serif"
 
 [server]
 headless = true
 enableCORS = false
+enableXsrfProtection = false
