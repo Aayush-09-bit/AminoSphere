@@ -25,7 +25,8 @@ ptm_phospho = st.sidebar.checkbox("Phosphorylation")
 ptm_glyco = st.sidebar.checkbox("Glycosylation")
 
 # Sequence input (unlimited length allowed)
-sequence = st.text_area("Enter protein sequence:", height=200)
+default_seq = "MGSSHHHHHHSSGLVPRGSHMRGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTARQSSIKWWGPRLASHGFVVITIDTNSTLDQPSSRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGGSLISAANNPSLKAAAPQAPWDSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEINGGSHSCANSGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTRVSDFRTANCSLEDPAANKARKEAELAAATAEQ"
+sequence = st.text_area("Enter protein sequence:", default_seq, height=200)
 
 if st.button("Predict Structure"):
     if sequence.strip():
@@ -41,6 +42,7 @@ if st.button("Predict Structure"):
         view.addModel(pdb, "pdb")
         view.setStyle({"cartoon": {"color": "spectrum"}})
         view.zoomTo()
+        view.spin(True)
         view.show()
         st.components.v1.html(view._make_html(), height=600)
 
