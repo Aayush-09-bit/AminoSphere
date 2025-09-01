@@ -1,5 +1,7 @@
 # 🧬 AminoSphere (ESMFold + Streamlit)
-An AI-powered web application for **protein structure prediction, mutation analysis, and interactive 3D visualization** using Meta’s ESMFold API.  
+An AI-powered web application for **protein structure prediction, mutation analysis, and interactive 3D visualization** using Meta’s ESMFold API.
+
+## Official Site: https://aminosphere-gmckrpfubxhqu2htncewty.streamlit.app/
 
 ![Python](https://img.shields.io/badge/python-v3.9+-blue.svg)
 ![Streamlit](https://img.shields.io/badge/streamlit-v1.32+-red.svg)
