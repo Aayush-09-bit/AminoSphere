@@ -1,23 +1,18 @@
-# 🧬 Protein Structure Explorer
+# 🧬 Protein Prediction App (ESMFold + Streamlit)
 
-A Streamlit web app to predict and visualize protein structures using [ESMFold](https://esmatlas.com).
+This app predicts protein 3D structures using **Meta’s ESMFold API** and provides:
+- Unlimited sequence input
+- Mutation mode (position-based residue change)
+- Environment-aware confidence adjustments (pH, temperature, PTMs)
+- Interactive 3D visualization (via py3Dmol)
+- CSV export of residue confidence scores
 
-## 🚀 Features
-- Paste any protein sequence (20–1000+ amino acids)
-- Predict 3D structure (via ESMFold API)
-- Interactive **3D viewer** with rotation & zoom (py3Dmol)
-- Graph of prediction confidence (pLDDT scores)
-- Plain-English summary of results
-- Optional **context-aware prediction**:
-  - pH, temperature
-  - Post-translational modifications (with simple explanations)
-- Export results as CSV
+---
 
-## 📦 Installation
+## 🚀 Run Locally
+
 ```bash
-git clone https://github.com/yourusername/protein-structure-app.git
-cd protein-structure-app
-python -m venv .venv
-.venv\Scripts\activate   # Windows
-source .venv/bin/activate # Linux/Mac
+git clone https://github.com/your-username/protein-prediction-app.git
+cd protein-prediction-app
 pip install -r requirements.txt
+streamlit run app.py
