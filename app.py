@@ -9,8 +9,8 @@ from utils.plotting import plot_confidence, save_results_csv
 
 
 # Page config
-st.set_page_config(page_title="Protein Prediction App", layout="wide")
-st.title("🧬 Protein Structure Prediction (ESMFold + Context)")
+st.set_page_config(page_title="AminoSphere", layout="wide")
+st.title("🧬 AminoSphere (Prediction + Exploration)")
 
 # Sidebar: choose mode
 mode = st.sidebar.radio(
