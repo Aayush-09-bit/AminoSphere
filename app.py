@@ -1,82 +1,75 @@
 import streamlit as st
 import pandas as pd
-from utils import (
-    call_esmfold_api,
-    show_3d_structure,
-    summarize_structure,
-    plot_plddt,
+import py3Dmol
+
+from utils.esmfold_api import query_esmfold
+from utils.mutations import mutate_sequence
+from utils.environment import adjust_confidence
+from utils.plotting import plot_confidence, save_results_csv
+
+
+# Page config
+st.set_page_config(page_title="Protein Prediction App", layout="wide")
+st.title("🧬 Protein Structure Prediction (ESMFold + Context)")
+
+# Sidebar: choose mode
+mode = st.sidebar.radio(
+    "Choose Mode:",
+    ["Normal Prediction", "Mutate Sequence", "Context-Aware Prediction"],
 )
 
-# ---- Streamlit Config ----
-st.set_page_config(
-    page_title="Protein Structure Explorer",
-    page_icon="🧬",
-    layout="wide"
-)
+# Sidebar: environment sliders
+pH = st.sidebar.slider("pH", 0.0, 14.0, 7.4, 0.1)
+temp = st.sidebar.slider("Temperature (°C)", 0.0, 100.0, 37.0, 1.0)
+ptm_phospho = st.sidebar.checkbox("Phosphorylation")
+ptm_glyco = st.sidebar.checkbox("Glycosylation")
 
-st.title("🧬 Protein Structure Explorer")
-st.write("Predict, visualize, and understand protein structures with AI-powered tools.")
+# Sequence input (unlimited length allowed)
+sequence = st.text_area("Enter protein sequence:", height=200)
 
-# ---- Sequence Input ----
-sequence = st.text_area(
-    "Enter protein sequence (A, C, D, E, ... single-letter amino acid codes)",
-    height=150,
-    placeholder="Paste or type your protein sequence here..."
-)
+if st.button("Predict Structure"):
+    if sequence.strip():
+        with st.spinner("Fetching prediction from ESMFold..."):
+            pdb, confidences = query_esmfold(sequence)
 
-if sequence:
-    if len(sequence) < 20:
-        st.warning("⚠️ Protein sequences shorter than 20 amino acids may not fold into stable structures.")
+        # Adjust confidence based on environment
+        confidences = adjust_confidence(confidences, pH, temp, ptm_phospho, ptm_glyco)
 
-# ---- Prediction Mode ----
-mode = st.radio(
-    "Choose prediction mode",
-    ["Normal Prediction", "Mutation Mode", "Context-Aware Prediction"]
-)
+        # 3D Viewer (always show)
+        st.subheader("3D Predicted Structure")
+        view = py3Dmol.view(width=800, height=600)
+        view.addModel(pdb, "pdb")
+        view.setStyle({"cartoon": {"color": "spectrum"}})
+        view.zoomTo()
+        view.show()
+        st.components.v1.html(view._make_html(), height=600)
 
-# ---- Context Options ----
-if mode == "Context-Aware Prediction":
-    st.subheader("Environmental Context")
-    ph = st.slider("pH Level", 1.0, 14.0, 7.4, step=0.1)
-    temp = st.slider("Temperature (°C)", 0, 100, 37)
+        # Plot confidence
+        st.subheader("Confidence Score Distribution")
+        st.pyplot(plot_confidence(confidences))
 
-    st.subheader("Post-Translational Modifications (PTMs)")
-    ptms = []
-    if st.checkbox("Phosphorylation (switches activity on/off)"):
-        ptms.append("Phosphorylation")
-    if st.checkbox("Glycosylation (adds stability, helps recognition)"):
-        ptms.append("Glycosylation")
-    if st.checkbox("Acetylation (controls interactions & stability)"):
-        ptms.append("Acetylation")
-else:
-    ph, temp, ptms = None, None, []
+        # Export CSV option
+        if st.button("Export Results to CSV"):
+            path = save_results_csv(sequence, confidences)
+            st.success(f"Results saved to {path}")
 
-# ---- Run Prediction ----
-if st.button("🔮 Predict Structure") and sequence:
-    with st.spinner("Predicting structure..."):
-        pdb_str, plddt_scores = call_esmfold_api(sequence)
+    else:
+        st.error("Please enter a protein sequence first.")
 
-    # ---- Show 3D Viewer ----
-    st.subheader("Interactive 3D Structure")
-    show_3d_structure(pdb_str)
-
-    # ---- Plot Confidence ----
-    st.subheader("Prediction Confidence Across Sequence")
-    plot_plddt(plddt_scores)
-
-    # ---- Plain-English Summary ----
-    st.subheader("Summary")
-    st.write(summarize_structure(plddt_scores))
-
-    # ---- CSV Export ----
-    df = pd.DataFrame({
-        "Residue Position": list(range(1, len(plddt_scores) + 1)),
-        "Confidence (pLDDT)": plddt_scores
-    })
-
-    st.download_button(
-        label="📥 Download confidence scores (CSV)",
-        data=df.to_csv(index=False),
-        file_name="confidence_scores.csv",
-        mime="text/csv"
-    )
+# Mutation mode
+if mode == "Mutate Sequence" and sequence.strip():
+    st.subheader("🔬 Mutation Mode")
+    pos = st.number_input("Residue position (1-indexed):", min_value=1, step=1)
+    new_residue = st.text_input("New residue (single-letter):", max_chars=1)
+    if st.button("Apply Mutation"):
+        mutated_seq = mutate_sequence(sequence, pos, new_residue)
+        st.info(f"Mutated Sequence: {mutated_seq}")
+        with st.spinner("Fetching mutated prediction..."):
+            pdb, confidences = query_esmfold(mutated_seq)
+        st.subheader("Mutated Structure (3D)")
+        view = py3Dmol.view(width=800, height=600)
+        view.addModel(pdb, "pdb")
+        view.setStyle({"cartoon": {"color": "spectrum"}})
+        view.zoomTo()
+        view.show()
+        st.components.v1.html(view._make_html(), height=600)
