@@ -1,7 +1,17 @@
-streamlit
-requests
-biotite
-py3Dmol
-stmol
-matplotlib
-pandas
+# Core framework
+streamlit==1.39.0
+
+# Protein modeling
+biopython==1.83
+py3Dmol==2.0.4
+
+# Data handling + plotting
+pandas==2.2.2
+matplotlib==3.9.2
+numpy==1.26.4
+
+# HTTP requests
+requests==2.32.3
+
+# Caching / utilities
+joblib==1.4.2
