@@ -1,5 +1,15 @@
-.venv/
+# Python
 __pycache__/
-*.pdb
-*.csv
-.DS_Store
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Streamlit cache
+.streamlit/
