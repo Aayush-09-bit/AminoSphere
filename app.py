@@ -43,7 +43,6 @@ if st.button("Predict Structure"):
         view.setStyle({"cartoon": {"color": "spectrum"}})
         view.zoomTo()
         view.spin(True)
-        view.show()
         st.components.v1.html(view._make_html(), height=600)
 
         # Plot confidence
