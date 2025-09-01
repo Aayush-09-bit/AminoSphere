@@ -72,5 +72,5 @@ if mode == "Mutate Sequence" and sequence.strip():
         view.addModel(pdb, "pdb")
         view.setStyle({"cartoon": {"color": "spectrum"}})
         view.zoomTo()
-        view.show()
+        view.spin(True)
         st.components.v1.html(view._make_html(), height=600)
