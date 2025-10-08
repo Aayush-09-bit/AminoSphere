@@ -7,7 +7,6 @@ from utils.mutations import mutate_sequence
 from utils.environment import adjust_confidence
 from utils.plotting import plot_confidence, save_results_csv
 
-
 # Page config
 st.set_page_config(page_title="AminoSphere", layout="wide")
 st.title("🧬 AminoSphere (Prediction + Exploration)")
@@ -24,19 +23,26 @@ temp = st.sidebar.slider("Temperature (°C)", 0.0, 100.0, 37.0, 1.0)
 ptm_phospho = st.sidebar.checkbox("Phosphorylation")
 ptm_glyco = st.sidebar.checkbox("Glycosylation")
 
-# Sequence input (unlimited length allowed)
-default_seq = "MGSSHHHHHHSSGLVPRGSHMRGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTARQSSIKWWGPRLASHGFVVITIDTNSTLDQPSSRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGGSLISAANNPSLKAAAPQAPWDSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEINGGSHSCANSGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTRVSDFRTANCSLEDPAANKARKEAELAAATAEQ"
+# Sequence input
+default_seq = (
+    "MGSSHHHHHHSSGLVPRGSHMRGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTARQSSIKWWGPRLASHGFVVITIDTNSTLDQPSSRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGGSLISAANNPSLKAAAPQAPWDSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEINGGSHSCANSGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTRVSDFRTANCSLEDPAANKARKEAELAAATAEQ"
+)
 sequence = st.text_area("Enter protein sequence:", default_seq, height=200)
 
+# Normal prediction
 if st.button("Predict Structure"):
     if sequence.strip():
         with st.spinner("Fetching prediction from ESMFold..."):
             pdb, confidences = query_esmfold(sequence)
 
+        if pdb is None:  # API unavailable
+            st.error("Prediction failed due to ESMFold API outage. Try again later.")
+            st.stop()
+
         # Adjust confidence based on environment
         confidences = adjust_confidence(confidences, pH, temp, ptm_phospho, ptm_glyco)
 
-        # 3D Viewer (always show)
+        # 3D Viewer
         st.subheader("3D Predicted Structure")
         view = py3Dmol.view(width=800, height=600)
         view.addModel(pdb, "pdb")
@@ -49,11 +55,10 @@ if st.button("Predict Structure"):
         st.subheader("Confidence Score Distribution")
         st.pyplot(plot_confidence(confidences))
 
-        # Export CSV option
+        # Export CSV
         if st.button("Export Results to CSV"):
             path = save_results_csv(sequence, confidences)
             st.success(f"Results saved to {path}")
-
     else:
         st.error("Please enter a protein sequence first.")
 
@@ -67,6 +72,11 @@ if mode == "Mutate Sequence" and sequence.strip():
         st.info(f"Mutated Sequence: {mutated_seq}")
         with st.spinner("Fetching mutated prediction..."):
             pdb, confidences = query_esmfold(mutated_seq)
+
+        if pdb is None:
+            st.error("Failed to fetch mutated structure. Please retry later.")
+            st.stop()
+
         st.subheader("Mutated Structure (3D)")
         view = py3Dmol.view(width=800, height=600)
         view.addModel(pdb, "pdb")
