@@ -23,26 +23,29 @@ temp = st.sidebar.slider("Temperature (°C)", 0.0, 100.0, 37.0, 1.0)
 ptm_phospho = st.sidebar.checkbox("Phosphorylation")
 ptm_glyco = st.sidebar.checkbox("Glycosylation")
 
-# Sequence input
+# Sequence input (unlimited length allowed)
 default_seq = (
     "MGSSHHHHHHSSGLVPRGSHMRGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTARQSSIKWWGPRLASHGFVVITIDTNSTLDQPSSRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGGSLISAANNPSLKAAAPQAPWDSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEINGGSHSCANSGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTRVSDFRTANCSLEDPAANKARKEAELAAATAEQ"
 )
 sequence = st.text_area("Enter protein sequence:", default_seq, height=200)
 
-# Normal prediction
+# ──────────────────────────────────────────────────────────────
+# Prediction Button
+# ──────────────────────────────────────────────────────────────
 if st.button("Predict Structure"):
     if sequence.strip():
         with st.spinner("Fetching prediction from ESMFold..."):
             pdb, confidences = query_esmfold(sequence)
 
-        if pdb is None:  # API unavailable
-            st.error("Prediction failed due to ESMFold API outage. Try again later.")
+        # Graceful failure handling
+        if pdb is None:
+            st.error("🚫 Prediction failed: ESMFold API is currently unavailable. Please try again later.")
             st.stop()
 
         # Adjust confidence based on environment
         confidences = adjust_confidence(confidences, pH, temp, ptm_phospho, ptm_glyco)
 
-        # 3D Viewer
+        # Display 3D Structure
         st.subheader("3D Predicted Structure")
         view = py3Dmol.view(width=800, height=600)
         view.addModel(pdb, "pdb")
@@ -51,30 +54,34 @@ if st.button("Predict Structure"):
         view.spin(True)
         st.components.v1.html(view._make_html(), height=600)
 
-        # Plot confidence
+        # Confidence Distribution Plot
         st.subheader("Confidence Score Distribution")
         st.pyplot(plot_confidence(confidences))
 
-        # Export CSV
+        # Export option
         if st.button("Export Results to CSV"):
             path = save_results_csv(sequence, confidences)
             st.success(f"Results saved to {path}")
     else:
         st.error("Please enter a protein sequence first.")
 
-# Mutation mode
+# ──────────────────────────────────────────────────────────────
+# Mutation Mode
+# ──────────────────────────────────────────────────────────────
 if mode == "Mutate Sequence" and sequence.strip():
     st.subheader("🔬 Mutation Mode")
     pos = st.number_input("Residue position (1-indexed):", min_value=1, step=1)
     new_residue = st.text_input("New residue (single-letter):", max_chars=1)
+
     if st.button("Apply Mutation"):
         mutated_seq = mutate_sequence(sequence, pos, new_residue)
         st.info(f"Mutated Sequence: {mutated_seq}")
+
         with st.spinner("Fetching mutated prediction..."):
             pdb, confidences = query_esmfold(mutated_seq)
 
         if pdb is None:
-            st.error("Failed to fetch mutated structure. Please retry later.")
+            st.error("🚫 Failed to fetch mutated structure. Please try again later.")
             st.stop()
 
         st.subheader("Mutated Structure (3D)")
