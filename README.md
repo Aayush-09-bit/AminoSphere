@@ -57,16 +57,6 @@ It integrates **Meta’s ESMFold API** with a smooth **Streamlit web interface**
 
 ---
 
-## 📁 Project Structure
-AminoSphere/
-├── app.py              # Streamlit main app
-├── esmfold_api.py      # Handles Meta ESMFold API calls
-├── utils.py            # Helper functions (mutations, plotting, etc.)
-├── requirements.txt    # Dependencies
-└── .gitignore          # Ignore cache/venv files
-
----
-
 ## 🔧 Technical Details
 - Backend: Streamlit + Python
 - 3D Viewer: Py3Dmol (interactive + auto-rotation)
